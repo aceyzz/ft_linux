@@ -337,3 +337,44 @@ drwxr-xr-x 2 root root 4096 Jan  1  1970 .
 drwxr-xr-x 3 root root 4096 Oct  9 09:21 ..
 ```
 > Le répertoire LFS est bien vide
+
+<br>
+
+## Téléchargements
+
+Créer le repértoire sources
+```bash
+mkdir -pv /mnt/lfs/sources
+chmod -v a+wt /mnt/lfs/sources
+```
+> Le bit `t` dans les permissions permet d'empêcher un utilisateur de supprimer ou renommer un fichier dans ce répertoire, à moins qu'il en soit le propriétaire.
+
+Telecharger la liste des paquets + leurs checksums
+```bash
+cd ~
+# Merci a vvaucoul pour les fichiers
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/sources_list.txt -o sources_list.txt
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/sources_list_md5.txt -o sources_list_md5.txt
+```
+
+Verifier leurs présence
+```bash
+ls -l sources_list.txt sources_list_md5.txt
+```
+
+Télécharger les paquets
+```bash
+export LFS=/mnt/lfs
+wget --input-file=sources_list.txt --continue --directory-prefix=$LFS/sources
+```
+> Cette étape prends un moment, va te chercher un café, prendre l'air, faire une sieste, etc.
+
+Vérifier les checksums
+```bash
+cp sources_list_md5.txt $LFS/sources/md5sums
+pushd $LFS/sources
+md5sum -c md5sums
+popd
+```
+> Tout les fichiers doivent être OK. Si ce n'est pas le cas, supprimer le fichier corrompu et relancer le téléchargement avec wget/curl
+
