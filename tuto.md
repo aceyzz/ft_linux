@@ -352,7 +352,7 @@ chmod -v a+wt /mnt/lfs/sources
 Telecharger la liste des paquets + leurs checksums
 ```bash
 cd ~
-# Merci a vvaucoul pour les fichiers
+# source : linuxfromscratch.org
 curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/sources_list.txt -o sources_list.txt
 curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/sources_list_md5.txt -o sources_list_md5.txt
 ```
