@@ -376,5 +376,5 @@ pushd $LFS/sources
 md5sum -c md5sums
 popd
 ```
-> Tout les fichiers doivent être OK. Si ce n'est pas le cas, supprimer le fichier corrompu et relancer le téléchargement avec wget/curl
+> Tout les fichiers doivent être OK. Si ce n'est pas le cas, supprimer le fichier corrompu et relancer le téléchargement avec wget/curl + vérifier que vous avez bien la dernière version de la liste des paquets
 
