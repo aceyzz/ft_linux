@@ -364,17 +364,184 @@ ls -l sources_list.txt sources_list_md5.txt
 
 Télécharger les paquets
 ```bash
-export LFS=/mnt/lfs
-wget --input-file=sources_list.txt --continue --directory-prefix=$LFS/sources
+wget --input-file=sources_list.txt --continue --directory-prefix=/mnt/lfs/sources
 ```
 > Cette étape prends un moment, va te chercher un café, prendre l'air, faire une sieste, etc.
 
 Vérifier les checksums
 ```bash
-cp sources_list_md5.txt $LFS/sources/md5sums
-pushd $LFS/sources
+cp sources_list_md5.txt /mnt/lfs/sources/md5sums
+pushd /mnt/lfs/sources
 md5sum -c md5sums
 popd
 ```
-> Tout les fichiers doivent être OK. Si ce n'est pas le cas, supprimer le fichier corrompu et relancer le téléchargement avec wget/curl + vérifier que vous avez bien la dernière version de la liste des paquets
+> Tout les fichiers doivent être OK. Si ce n'est pas le cas, vérifier que vous avez bien la dernière version de la liste des paquets, et relancer le téléchargement des paquets :  
+https://www.linuxfromscratch.org/lfs/downloads/stable/md5sums  
+https://www.linuxfromscratch.org/lfs/downloads/stable/wget-list  
+
+## Préparation du LFS
+
+Creer les repertoires necessaires
+```bash
+mkdir -pv /mnt/lfs/tools
+ln -sv /mnt/lfs/tools /
+# Dossiers de base
+mkdir -pv /mnt/lfs/{etc,var}
+mkdir -pv /mnt/lfs/usr/{bin,lib,sbin}
+```
+
+Config les liens de compatibilité du futur lfs
+```bash
+for i in bin lib sbin; do
+  ln -sv usr/$i /mnt/lfs/$i
+done
+```
+
+Creer le groupe et l'utilisateur LFS
+```bash
+# 1. creer le groupe
+groupadd lfs
+# 2. creer l'utilisateur
+useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+# 3. definir le mot de passe
+echo -e "lfs\nlfs" | passwd lfs
+# 4. definir l'ownership
+chown -v lfs /mnt/lfs/tools
+chown -v lfs /mnt/lfs/sources
+chown -v lfs /mnt/lfs/{usr,lib,var,etc,bin,sbin}
+chown -v lfs /mnt/lfs/usr/{bin,lib,sbin}
+```
+
+Check que tout se soit bien passé
+```bash
+getent passwd lfs
+getent group lfs
+ls -ld /mnt/lfs/tools
+ls -ld /mnt/lfs/sources 
+ls -ld /mnt/lfs/{usr,lib,var,etc,bin,sbin}
+ls -ld /mnt/lfs/usr/{bin,lib,sbin}
+```
+
+## Configuration de l'environnement (User `lfs`)
+
+Passer en utilisateur LFS
+```bash
+su - lfs
+```
+
+Configurer l'environnement
+```bash
+cat > ~/.bash_profile << "EOF"
+exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+EOF
+```
+(suite...)
+```bash
+cat > ~/.bashrc << "EOF"
+set +h
+umask 022
+LFS=/mnt/lfs
+LC_ALL=POSIX
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+PATH=/usr/bin
+if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+PATH=$LFS/tools/bin:$PATH
+CONFIG_SITE=$LFS/usr/share/config.site
+export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+EOF
+```
+
+Recharger le profile et définir MAKEFLAGS
+```bash
+source ~/.bash_profile
+export MAKEFLAGS='-j$(nproc)'
+exec <&-
+```
+> Le `-j$(nproc)` permet d'utiliser tous les coeurs CPU pour la compilation  
+> Si erreur `bash: /bin/sh: No such file or directory`, c'est que le `ln -s /usr/bin/bash /bin/sh` n'a pas été fait  
+> le `exec <&-` permet de fermer STDIN, nécessaire pour certaines commandes comme `passwd`  
+
+Check de l'environnement
+```bash
+echo "$LFS"        # doit afficher /mnt/lfs
+echo "$LFS_TGT"    # doit afficher aarch64-lfs-linux-gnu
+which bash         # /usr/bin/bash
+which env          # /usr/bin/env
+echo "$PATH"       # doit commencer par /mnt/lfs/tools/bin:/usr/bin
+```
+
+## Configuration de l'environnement (User `root`)
+
+Revenir en root
+```bash
+exit # si tu es en lfs, ctrl+D marche aussi bien
+[ -f ~/.bash_profile ] && cp -a ~/.bash_profile ~/.bash_profile.bak
+[ -f ~/.bashrc ] && cp -a ~/.bashrc ~/.bashrc.bak
+```
+> toujours une petite sauvegarde avant de modifier  
+
+Creer profil minimal pour root
+```bash
+cat > ~/.bash_profile << "EOF"
+exec env -i HOME=$HOME TERM=$TERM PS1='\u:\w\$ ' /bin/bash
+EOF
+```
+(suite...)
+```bash
+cat > ~/.bashrc << "EOF"
+set +h
+umask 022
+LFS=/mnt/lfs
+LC_ALL=POSIX
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+PATH=/usr/bin
+if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+PATH=$LFS/tools/bin:$PATH
+CONFIG_SITE=$LFS/usr/share/config.site
+export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+EOF
+```
+
+Recharger le profile et définir MAKEFLAGS
+```bash
+source ~/.bash_profile
+export MAKEFLAGS='-j$(nproc)'
+exec <&-
+```
+
+Check de l'environnement
+```bash
+echo "$LFS"       # /mnt/lfs
+echo "$LFS_TGT"   # aarch64-lfs-linux-gnu
+echo "$PATH"      # /mnt/lfs/tools/bin:/usr/bin
+```
+
+Toujours en root
+```bash
+export PATH=/usr/sbin:/sbin:$PATH
+echo "dash dash/sh boolean false" | debconf-set-selections
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+```
+> Pour utiliser bash comme shell par défaut et pas dash (plus limité)
+
+Installation des paquets indispensables
+```bash
+apt-get update && apt-get upgrade -y
+apt-get install -y gawk
+apt-get install -y bison
+apt-get install -y build-essential
+```
+
+Verifier versions outils hôtes
+```bash
+curl -fsSL http://www.linuxfromscratch.org/lfs/view/stable/chapter02/hostreqs.html \
+  | grep -A53 "# Simple script to list version numbers of critical development tools" \
+  | sed 's:</code>::g' | sed 's:&gt;:>:g' | sed 's:&lt;:<:g' | sed 's:&amp;:\&:g' \
+  | sed 's:failed:not OK:g' > /root/version-check.sh
+
+bash /root/version-check.sh | tee /root/version-check.log
+bash /root/version-check.sh | grep -i "not OK" || echo "All host tools look OK"
+```
+
+## Création du système temporaire
 
