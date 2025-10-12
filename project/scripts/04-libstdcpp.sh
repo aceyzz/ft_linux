@@ -75,3 +75,8 @@ G "libstdc++ (pass 1) installé avec succès."
 cd "$SRC_DIR"
 rm -rf "$BUILD_DIR" "$SRC_DIR/$GCC_PKG"
 G "Nettoyage terminé."
+
+Y "Déplacement depuis lib64 vers lib"
+mkdir -p $LFS/usr/lib
+mv -v $LFS/usr/lib64/libstdc++.a $LFS/usr/lib/
+rmdir $LFS/usr/lib64 2>/dev/null || true
