@@ -587,3 +587,16 @@ Supprimer le script d'installation
 rm -v $LFS/sources/01-gcc.sh
 ```
 
+Installation de `linux-headers`
+```bash
+cd $LFS/sources
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.4)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/02-linux_api_headers.sh -o 02-linux_api_headers.sh
+chmod +x 02-linux_api_headers.sh
+time ./02-linux_api_headers.sh
+```
+
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/02-linux_api_headers.sh
+```
