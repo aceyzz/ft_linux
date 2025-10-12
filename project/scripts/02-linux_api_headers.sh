@@ -29,7 +29,8 @@ find usr/include -name '.*' -delete
 rm -f usr/include/Makefile
 
 echo -e "${YELLOW}[INFO] Installing headers to $LFS/usr/include...${RESET}"
-cp -rv usr/include $LFS/usr
+install -d $LFS/usr/include
+cp -rv usr/include/* $LFS/usr/include/
 
 echo -e "${GREEN}[SUCCESS] Linux API Headers installed successfully.${RESET}"
 
