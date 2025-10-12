@@ -191,6 +191,11 @@ Télécharger la liste des sources et leurs MD5
 wget https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/wget-list-sysv
 wget https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/md5sums
 ```
+OU
+```bash
+wget https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/wget-list-sysv
+wget https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/md5sums
+```
 
 Lancer le téléchargement
 ```bash
