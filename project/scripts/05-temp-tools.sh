@@ -33,20 +33,29 @@ ln -sv bash "$LFS/usr/bin/sh" || true
 cd ..
 
 # ===== coreutils =====
-rm -rf coreutils-9.7 && tar -xf coreutils-9.7.tar.xz && cd coreutils-9.7
+rm -rf coreutils-9.7
+tar -xf coreutils-9.7.tar.xz
+cd coreutils-9.7
 patch -Np1 -i ../coreutils-9.7-i18n-1.patch
 patch -Np1 -i ../coreutils-9.7-upstream_fix-1.patch
+CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_GL_ATTRIBUTE_NODISCARD=" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(build-aux/config.guess)" \
   --enable-no-install-program=kill,uptime
+make clean
 make -j"$(nproc)"
-make DESTDIR="$LFS" install
+make DESTDIR="$LFS" CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_GL_ATTRIBUTE_NODISCARD=" install
 mv -v "$LFS/usr/bin/chroot" "$LFS/usr/sbin/" || true
 cd ..
 
 # ===== diffutils =====
-rm -rf diffutils-3.12 && tar -xf diffutils-3.12.tar.xz && cd diffutils-3.12
+cd "$LFS/sources"
+rm -rf diffutils-3.12
+tar -xf diffutils-3.12.tar.xz
+cd diffutils-3.12
+CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096" \
+gl_cv_func_strcasecmp_works=yes \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
@@ -63,9 +72,13 @@ rm -rf build-host
 cd ..
 
 # ===== findutils =====
-rm -rf findutils-4.10.0 && tar -xf findutils-4.10.0.tar.xz && cd findutils-4.10.0
+cd "$LFS/sources"
+rm -rf findutils-4.10.0
+tar -xf findutils-4.10.0.tar.xz
+cd findutils-4.10.0
+CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096 -include limits.h" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
@@ -78,16 +91,24 @@ make DESTDIR="$LFS" install
 cd ..
 
 # ===== grep =====
-rm -rf grep-3.12 && tar -xf grep-3.12.tar.xz && cd grep-3.12
+cd "$LFS/sources"
+rm -rf grep-3.12
+tar -xf grep-3.12.tar.xz
+cd grep-3.12
+CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
 # ===== gzip =====
-rm -rf gzip-1.14 && tar -xf gzip-1.14.tar.xz && cd gzip-1.14
+cd "$LFS/sources"
+rm -rf gzip-1.14
+tar -xf gzip-1.14.tar.xz
+cd gzip-1.14
+CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -include limits.h" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
@@ -99,23 +120,31 @@ make DESTDIR="$LFS" install
 cd ..
 
 # ===== patch =====
-rm -rf patch-2.8 && tar -xf patch-2.8.tar.xz && cd patch-2.8
+cd "$LFS/sources"
+rm -rf patch-2.8
+tar -xf patch-2.8.tar.xz
+cd patch-2.8
+CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -include limits.h" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-I$LFS/usr/include -DMB_LEN_MAX=16 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
 # ===== sed =====
-rm -rf sed-4.9 && tar -xf sed-4.9.tar.xz && cd sed-4.9
+cd "$LFS/sources"
+rm -rf sed-4.9
+tar -xf sed-4.9.tar.xz
+cd sed-4.9
+CPPFLAGS="-DMB_LEN_MAX=16 -include limits.h" \
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
 # ===== tar =====
 rm -rf tar-1.35 && tar -xf tar-1.35.tar.xz && cd tar-1.35
 ./configure --prefix=/usr --host="$LFS_TGT" --build="$(./build-aux/config.guess)"
-make -j"$(nproc)"
+make CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 cd ..
 
