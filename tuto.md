@@ -567,13 +567,23 @@ time ./00-binutils.sh
 ```
 > build > compile > install > check > cleanup
 
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/00-binutils.sh
+```
+
 Installation de `gcc`
 ```bash
 cd $LFS/sources
 # telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.3)
-curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/00-gcc.sh -o 00-gcc.sh
-chmod +x 00-gcc.sh
-time ./00-gcc.sh
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/01-gcc.sh -o 01-gcc.sh
+chmod +x 01-gcc.sh
+time ./01-gcc.sh
 ```
 > build > compile > install > check > cleanup
+
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/01-gcc.sh
+```
 
