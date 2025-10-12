@@ -33,19 +33,18 @@ ln -sv bash "$LFS/usr/bin/sh" || true
 cd ..
 
 # ===== coreutils =====
+cd "$LFS/sources"
 rm -rf coreutils-9.7
 tar -xf coreutils-9.7.tar.xz
 cd coreutils-9.7
-patch -Np1 -i ../coreutils-9.7-i18n-1.patch
-patch -Np1 -i ../coreutils-9.7-upstream_fix-1.patch
-CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_GL_ATTRIBUTE_NODISCARD=" \
-./configure --prefix=/usr --host="$LFS_TGT" --build="$(build-aux/config.guess)" \
-  --enable-no-install-program=kill,uptime
-make clean
+CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" \
+./configure --prefix=/usr \
+  --host="$LFS_TGT" --build="$(build-aux/config.guess)" \
+  --enable-no-install-program=kill,uptime \
+  --disable-nls
 make -j"$(nproc)"
-make DESTDIR="$LFS" CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_GL_ATTRIBUTE_NODISCARD=" install
+make DESTDIR="$LFS" install
 mv -v "$LFS/usr/bin/chroot" "$LFS/usr/sbin/" || true
-cd ..
 
 # ===== diffutils =====
 cd "$LFS/sources"
