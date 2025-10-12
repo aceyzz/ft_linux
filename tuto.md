@@ -600,3 +600,18 @@ Supprimer le script d'installation
 ```bash
 rm -v $LFS/sources/02-linux_api_headers.sh
 ```
+
+Installation de `glibc`
+```bash
+cd $LFS/sources
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.5)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/03-glibc.sh -o 03-glibc.sh
+chmod +x 03-glibc.sh
+time ./03-glibc.sh
+```
+> build > compile > install > check > cleanup
+
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/03-glibc.sh
+```
