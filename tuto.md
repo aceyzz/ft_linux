@@ -557,37 +557,23 @@ echo "$LFS_TGT"   # doit afficher aarch64-lfs-linux-gnu
 echo "$PATH"      # doit commencer par /mnt/lfs/tools/bin:/usr/bin
 ```
 
-> Cette installation manuelle de `binutils` est juste pour montrer comment compiler un paquet, tout le reste je l'ai fait en script.
-
-Installation de binutils
-```bash
-# changer dossier et decompresser l'archive
-cd $LFS/sources
-tar -xvf binutils-2.45.tar.xz
-cd binutils-2.45
-# creer le dossier de build
-mkdir -v build
-cd build
-# configurer, compiler et installer
-time { ../configure --prefix=$LFS/tools \
-                    --with-sysroot=$LFS \
-                    --target=$LFS_TGT   \
-                    --disable-nls       \
-                    --disable-werror    \
-  && make -j$(nproc) \
-  && make install; }
-```
-
-Check de l'installation
-```bash
-$LFS/tools/bin/$LFS_TGT-ld --version | head -n1 # doit afficher 2.45
-$LFS/tools/bin/$LFS_TGT-as --version | head -n1 # doit afficher 2.45
-```
-
-Si OK, nettoie derriere toi
+Installation de `binutils`
 ```bash
 cd $LFS/sources
-rm -rf binutils-2.45
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.2)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/00-binutils.sh -o 00-binutils.sh
+chmod +x 00-binutils.sh
+time ./00-binutils.sh
 ```
+> build > compile > install > check > cleanup
 
-Installation de gcc
+Installation de `gcc`
+```bash
+cd $LFS/sources
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.3)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/00-gcc.sh -o 00-gcc.sh
+chmod +x 00-gcc.sh
+time ./00-gcc.sh
+```
+> build > compile > install > check > cleanup
+
