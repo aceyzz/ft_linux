@@ -157,3 +157,6 @@ cd ..
 
 # ===== cleanup =====
 find "$LFS/usr/lib" -type f -name '*.la' -delete || true
+
+# ===== final message =====
+echo "\033[32m[+] Temporary tools installed successfully! \033[0m"
