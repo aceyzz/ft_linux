@@ -632,3 +632,18 @@ Supprimer le script d'installation
 ```bash
 rm -v $LFS/sources/04-libstdcpp.sh
 ```
+
+## Cross-compilation Temporaire Tools
+```bash
+cd $LFS/sources
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.7)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/05-temp-tools.sh -o 05-temp-tools.sh
+chmod +x 05-temp-tools.sh
+time ./05-temp-tools.sh
+```
+> build > compile > install > check > cleanup
+
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/05-temp-tools.sh
+```
