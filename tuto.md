@@ -557,6 +557,8 @@ echo "$LFS_TGT"   # doit afficher aarch64-lfs-linux-gnu
 echo "$PATH"      # doit commencer par /mnt/lfs/tools/bin:/usr/bin
 ```
 
+> Chaque installation qui va suivre peut prendre un moment, va te chercher un autre café
+
 Installation de `binutils`
 ```bash
 cd $LFS/sources
@@ -614,4 +616,19 @@ time ./03-glibc.sh
 Supprimer le script d'installation
 ```bash
 rm -v $LFS/sources/03-glibc.sh
+```
+
+Installation de `libstdc++`
+```bash
+cd $LFS/sources
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.6)
+curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/04-libstdcpp.sh -o 04-libstdcpp.sh
+chmod +x 04-libstdcpp.sh
+time ./04-libstdcpp.sh
+```
+> build > compile > install > check > cleanup
+
+Supprimer le script d'installation
+```bash
+rm -v $LFS/sources/04-libstdcpp.sh
 ```
