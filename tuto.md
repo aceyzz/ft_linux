@@ -540,8 +540,54 @@ curl -fsSL http://www.linuxfromscratch.org/lfs/view/stable/chapter02/hostreqs.ht
   | sed 's:failed:not OK:g' > /root/version-check.sh
 
 bash /root/version-check.sh | tee /root/version-check.log
-bash /root/version-check.sh | grep -i "not OK" || echo "All host tools look OK"
+bash /root/version-check.sh | grep -i "not OK" || echo "Tout bon brother"
 ```
 
 ## Création du système temporaire
 
+Repasser en utilisateur LFS (et quelques checks, jsuis parano)
+```bash
+sudo su - lfs
+```
+
+Check de l'environnement
+```bash
+echo "$LFS"       # doit afficher /mnt/lfs
+echo "$LFS_TGT"   # doit afficher aarch64-lfs-linux-gnu
+echo "$PATH"      # doit commencer par /mnt/lfs/tools/bin:/usr/bin
+```
+
+> Cette installation manuelle de `binutils` est juste pour montrer comment compiler un paquet, tout le reste je l'ai fait en script.
+
+Installation de binutils
+```bash
+# changer dossier et decompresser l'archive
+cd $LFS/sources
+tar -xvf binutils-2.45.tar.xz
+cd binutils-2.45
+# creer le dossier de build
+mkdir -v build
+cd build
+# configurer, compiler et installer
+time { ../configure --prefix=$LFS/tools \
+                    --with-sysroot=$LFS \
+                    --target=$LFS_TGT   \
+                    --disable-nls       \
+                    --disable-werror    \
+  && make -j$(nproc) \
+  && make install; }
+```
+
+Check de l'installation
+```bash
+$LFS/tools/bin/$LFS_TGT-ld --version | head -n1 # doit afficher 2.45
+$LFS/tools/bin/$LFS_TGT-as --version | head -n1 # doit afficher 2.45
+```
+
+Si OK, nettoie derriere toi
+```bash
+cd $LFS/sources
+rm -rf binutils-2.45
+```
+
+Installation de gcc
