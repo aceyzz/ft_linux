@@ -42,7 +42,7 @@ CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" \
   --host="$LFS_TGT" --build="$(build-aux/config.guess)" \
   --enable-no-install-program=kill,uptime \
   --disable-nls
-make -j"$(nproc)"
+make CPPFLAGS="-DMB_LEN_MAX=16 -DPATH_MAX=4096 -include limits.h" -j"$(nproc)"
 make DESTDIR="$LFS" install
 mv -v "$LFS/usr/bin/chroot" "$LFS/usr/sbin/" || true
 

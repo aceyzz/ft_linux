@@ -634,9 +634,11 @@ rm -v $LFS/sources/04-libstdcpp.sh
 ```
 
 ## Cross-compilation Temporaire Tools
+
+Installation des outils temporaires (batch)
 ```bash
 cd $LFS/sources
-# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 5.7)
+# telecharger script d'install (custom, mais tu peux refaire la meme a partir du tuto dans linuxfromscratch.org, etape 6 a 6.8)
 curl -fsSL https://raw.githubusercontent.com/aceyzz/ft_linux/refs/heads/main/project/scripts/05-temp-tools.sh -o 05-temp-tools.sh
 chmod +x 05-temp-tools.sh
 time ./05-temp-tools.sh
