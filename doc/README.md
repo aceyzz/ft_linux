@@ -839,3 +839,36 @@ rm -rf coreutils-9.7
 
 #### Diffutils
 
+Extraction
+```bash
+tar -xvf diffutils-3.12.tar.xz
+cd diffutils-3.12
+```
+
+Configuration
+```bash
+time {
+  CPPFLAGS='-DMB_LEN_MAX=16 -DPATH_MAX=4096' \
+  ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            gl_cv_func_strcasecmp_works=y \
+            --build=$(./build-aux/config.guess)
+}
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf diffutils-3.12
+```
+
+#### File
+
