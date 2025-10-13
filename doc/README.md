@@ -944,3 +944,31 @@ rm -rvf findutils-4.10.0
 
 #### Gawk
 
+Extraction
+```bash
+tar -xvf gawk-5.3.2.tar.xz
+cd gawk-5.3.2
+```
+
+Petit cleanup
+```bash
+sed -i 's/extras//' Makefile.in
+```
+
+Configuration
+```bash
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+#### Grep
+
