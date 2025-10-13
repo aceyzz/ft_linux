@@ -855,6 +855,7 @@ time {
             --build=$(./build-aux/config.guess)
 }
 ```
+> Pareil que pour M4, ajouter les flags CPP m'a permis de faire passer la compilation
 
 Compilation et installation
 ```bash
