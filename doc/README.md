@@ -751,3 +751,10 @@ sed -e 's/^#if.*XOPEN.*$/#if 1/' \
     -i $LFS/usr/include/curses.h
 ```
 
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf ncurses-6.5-20250809
+```
+
+#### Bash
