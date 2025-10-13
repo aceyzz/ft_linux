@@ -485,3 +485,126 @@ cd $LFS/sources
 rm -rf linux-6.16.1
 ```
 
+#### Glibc
+
+Extraction
+```bash
+tar -xvf glibc-2.42.tar.xz
+cd glibc-2.42
+```
+
+Patch
+```bash
+patch -Np1 -i ../glibc-2.42-fhs-1.patch
+```
+
+Dossier de build
+```bash
+mkdir -v build
+cd build
+```
+
+Paramétrage
+```bash
+echo "rootsbindir=/usr/sbin" > configparms
+```
+
+Configuration
+```bash
+time {
+  ../configure                             \
+      --prefix=/usr                      \
+      --host=$LFS_TGT                    \
+      --build=$(../scripts/config.guess) \
+      --disable-nscd                     \
+      libc_cv_slibdir=/usr/lib           \
+      --enable-kernel=5.4
+}
+```
+
+Compilation
+> Attention : Par sécurité, il est préférable de lancer `make -j1` pour cette étape, car il peut y avoir des erreurs de compilation avec le multi-threading. Ce sera plus long, mais au moins ça passe
+```bash
+time {
+  make -j1
+}
+```
+
+Installation
+```bash
+time {
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Fix des liens
+```bash
+sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd
+```
+
+Sanity check (1)
+```bash
+echo 'int main(){}' | $LFS_TGT-gcc -x c - -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
+# doit retourner :
+#      [Requesting program interpreter: /lib/ld-linux-aarch64.so.1]
+# peut etre legerement different selon l'archi
+```
+
+Sanity check (2)
+```bash
+grep -E -o "$LFS/lib.*/S?crt[1in].*succeeded" dummy.log
+# doit retourner :
+#   /mnt/lfs/lib/../lib/Scrt1.o succeeded
+#   /mnt/lfs/lib/../lib/crti.o succeeded
+#   /mnt/lfs/lib/../lib/crtn.o succeeded
+```
+
+Sanity check (3)
+```bash
+grep -B3 "^ $LFS/usr/include" dummy.log
+# doit retourner :
+#   /mnt/lfs/tools/lib/gcc/aarch64-lfs-linux-gnu/15.2.0/include
+#   /mnt/lfs/tools/lib/gcc/aarch64-lfs-linux-gnu/15.2.0/include-fixed
+#   /mnt/lfs/usr/include
+# peut etre legerement different selon l'archi
+```
+
+Sanity check (4)
+```bash
+grep 'SEARCH.*/usr/lib' dummy.log |sed 's|; |\n|g'
+# doit retourner :
+#   SEARCH_DIR("=/mnt/lfs/tools/aarch64-lfs-linux-gnu/lib64")
+#   SEARCH_DIR("=/usr/local/lib64")
+#   SEARCH_DIR("=/lib64")
+#   SEARCH_DIR("=/usr/lib64")
+#   SEARCH_DIR("=/mnt/lfs/tools/aarch64-lfs-linux-gnu/lib")
+#   SEARCH_DIR("=/usr/local/lib")
+#   SEARCH_DIR("=/lib")
+#   SEARCH_DIR("=/usr/lib");
+# peut etre legerement different selon l'archi
+```
+
+Sanity check (5)
+```bash
+grep "/lib.*/libc.so.6 " dummy.log
+# doit retourner :
+#   attempt to open /mnt/lfs/usr/lib/libc.so.6 succeeded
+```
+
+Sanity check (6)
+```bash
+grep found dummy.log
+# doit retourner :
+#   found ld-linux-aarch64.so.1 at /mnt/lfs/usr/lib/ld-linux-aarch64.so.1
+# peut etre legerement different selon l'archi
+```
+
+Cleanup
+```bash
+rm -v a.out dummy.log
+cd $LFS/sources
+rm -rf glibc-2.42
+```
+
+#### Libstdc++
