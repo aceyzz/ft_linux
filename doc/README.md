@@ -457,3 +457,31 @@ Cleanup
 cd $LFS/sources
 rm -rf gcc-15.2.0
 ```
+
+#### Linux API Headers
+
+Extraction
+```bash
+tar -xvf linux-6.16.1.tar.xz
+cd linux-6.16.1
+```
+
+Petit cleanup
+```bash
+make mrproper
+```
+
+Installation des headers
+```bash
+make headers
+# puis deplacer les headers dans /mnt/lfs/usr/include
+find usr/include -type f ! -name '*.h' -delete
+cp -rv usr/include $LFS/usr
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf linux-6.16.1
+```
+
