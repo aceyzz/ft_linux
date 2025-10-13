@@ -386,7 +386,7 @@ time {
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf binutils-2.45
+rm -rvf binutils-2.45
 ```
 
 #### GCC (pass 1)
@@ -456,7 +456,7 @@ time {
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf gcc-15.2.0
+rm -rvf gcc-15.2.0
 ```
 
 #### Linux API Headers
@@ -483,7 +483,7 @@ cp -rv usr/include $LFS/usr
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf linux-6.16.1
+rm -rvf linux-6.16.1
 ```
 
 #### Glibc
@@ -605,7 +605,7 @@ Cleanup
 ```bash
 rm -v a.out dummy.log
 cd $LFS/sources
-rm -rf glibc-2.42
+rm -rvf glibc-2.42
 ```
 
 > Pour les prochaines étapes, si un des packages échoue, cela voudra dire que quelque chose s'est mal passé avant. Auquel cas, il faudra certainement reprendre l'ensemble des étapes depuis le [début de la cross-toolchain ](#compilation-des-paquets)
@@ -659,7 +659,7 @@ Cleanup
 ```bash
 rm -v $LFS/usr/lib/lib{stdc++{,exp,fs},supc++}.la
 cd $LFS/sources
-rm -rf gcc-15.2.0
+rm -rvf gcc-15.2.0
 ```
 
 ### Outils temporaires
@@ -694,7 +694,7 @@ time {
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf m4-1.4.20
+rm -rvf m4-1.4.20
 ```
 
 #### Ncurses
@@ -754,7 +754,7 @@ sed -e 's/^#if.*XOPEN.*$/#if 1/' \
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf ncurses-6.5-20250809
+rm -rvf ncurses-6.5-20250809
 ```
 
 #### Bash
@@ -834,7 +834,7 @@ sed -i 's/"1"/"8"/'                    $LFS/usr/share/man/man8/chroot.8
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf coreutils-9.7
+rm -rvf coreutils-9.7
 ```
 
 #### Diffutils
@@ -868,8 +868,48 @@ time {
 Cleanup
 ```bash
 cd $LFS/sources
-rm -rf diffutils-3.12
+rm -rvf diffutils-3.12
 ```
 
 #### File
+
+Extraction
+```bash
+tar -xvf file-5.46.tar.gz
+cd file-5.46
+```
+
+Dossier de build (creation d'une copie pour la signature)
+```bash
+mkdir build
+pushd build
+  ../configure --disable-bzlib      \
+               --disable-libseccomp \
+               --disable-xzlib      \
+               --disable-zlib
+  make
+popd
+```
+
+Preparer file pour la compilation
+```bash
+./configure --prefix=/usr --host=$LFS_TGT --build=$(./config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make FILE_COMPILE=$(pwd)/build/src/file -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+rm -v $LFS/usr/lib/libmagic.la
+cd $LFS/sources
+rm -rvf file-5.46
+```
+
+#### Findutils
 
