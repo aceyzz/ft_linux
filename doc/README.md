@@ -1066,3 +1066,33 @@ rm -rvf make-4.4.1
 
 #### Patch
 
+Extraction
+```bash
+tar -xvf patch-2.8.tar.xz
+cd patch-2.8
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf patch-2.8
+```
+
+#### Sed
+
