@@ -1037,3 +1037,32 @@ rm -rvf gzip-1.14
 
 #### Make
 
+Extraction
+```bash
+tar -xvf make-4.4.1.tar.gz
+cd make-4.4.1
+```
+
+Configuration
+```bash
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf make-4.4.1
+```
+
+#### Patch
+
