@@ -607,4 +607,58 @@ cd $LFS/sources
 rm -rf glibc-2.42
 ```
 
+> Pour les prochaines étapes, si un des packages échoue, cela voudra dire que quelque chose s'est mal passé avant. Auquel cas, il faudra certainement reprendre l'ensemble des étapes depuis le [début de la cross-toolchain ](#compilation-des-paquets)
+
 #### Libstdc++
+
+> `libstdc++` fait partie de `gcc`, donc on va réutiliser `gcc-15.2.0`
+
+Extraction
+```bash
+tar -xvf gcc-15.2.0.tar.xz
+cd gcc-15.2.0
+```
+
+Dossier de build
+```bash
+mkdir -v build
+cd       build
+```
+
+Configuration
+```bash
+time {
+  ../libstdc++-v3/configure      \
+    --host=$LFS_TGT            \
+    --build=$(../config.guess) \
+    --prefix=/usr              \
+    --disable-multilib         \
+    --disable-nls              \
+    --disable-libstdcxx-pch    \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/15.2.0
+}
+```
+
+Compilation
+```bash
+time {
+  make
+}
+```
+
+Installation
+```bash
+time {
+  make DESTDIR=$LFS install
+}
+```
+
+Cleanup
+> Nécessite de supprimer `libtool`, car il va y avoir des conflits lors de la cross compilation
+```bash
+rm -v $LFS/usr/lib/lib{stdc++{,exp,fs},supc++}.la
+cd $LFS/sources
+rm -rf gcc-15.2.0
+```
+
+### Outils temporaires
