@@ -1096,3 +1096,217 @@ rm -rvf patch-2.8
 
 #### Sed
 
+Extraction
+```bash
+tar -xvf sed-4.9.tar.xz
+cd sed-4.9
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(./build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf sed-4.9
+```
+
+#### Tar
+
+Extraction
+```bash
+tar -xvf tar-1.35.tar.xz
+cd tar-1.35
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf tar-1.35
+```
+
+#### Xz
+
+Extraction
+```bash
+tar -xvf xz-5.8.1.tar.xz
+cd xz-5.8.1
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess) \
+            --disable-static                  \
+            --docdir=/usr/share/doc/xz-5.8.1
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+rm -v $LFS/usr/lib/liblzma.la
+cd $LFS/sources
+rm -rvf xz-5.8.1
+```
+
+#### Binutils (pass 2)
+
+Extraction
+```bash
+tar -xvf binutils-2.45.tar.xz
+cd binutils-2.45
+```
+
+Preparation
+```bash
+sed '6031s/$add_dir//' -i ltmain.sh
+```
+> Correction d'un bug dans `ltmain.sh` qui empêche la compilation de binutils
+
+Configuration
+```bash
+../configure                   \
+    --prefix=/usr              \
+    --build=$(../config.guess) \
+    --host=$LFS_TGT            \
+    --disable-nls              \
+    --enable-shared            \
+    --enable-gprofng=no        \
+    --disable-werror           \
+    --enable-64-bit-bfd        \
+    --enable-new-dtags         \
+    --enable-default-hash-style=gnu
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+rm -v $LFS/usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes,sframe}.{a,la}
+cd $LFS/sources
+rm -rvf binutils-2.45
+```
+
+#### GCC (pass 2)
+
+Extraction
+```bash
+tar -xvf gcc-15.2.0.tar.xz
+cd gcc-15.2.0
+```
+
+Dépendances
+```bash
+tar -xf ../mpfr-4.2.2.tar.xz
+mv -v mpfr-4.2.2 mpfr
+tar -xf ../gmp-6.3.0.tar.xz
+mv -v gmp-6.3.0 gmp
+tar -xf ../mpc-1.3.1.tar.gz
+mv -v mpc-1.3.1 mpc
+```
+
+Specificité ARM64
+```bash
+sed -e '/lp64=/s/lib64/lib/' \
+    -i.orig gcc/config/aarch64/t-aarch64-linux
+```
+
+Surcharge les regles de build
+```bash
+sed '/thread_header =/s/@.*@/gthr-posix.h/' \
+    -i libgcc/Makefile.in libstdc++-v3/include/Makefile.in
+```
+
+Dossier de build
+```bash
+mkdir -v build
+cd       build
+```
+
+Configuration
+```bash
+../configure                   \
+    --build=$(../config.guess) \
+    --host=$LFS_TGT            \
+    --target=$LFS_TGT          \
+    --prefix=/usr              \
+    --with-build-sysroot=$LFS  \
+    --enable-default-pie       \
+    --enable-default-ssp       \
+    --disable-nls              \
+    --disable-multilib         \
+    --disable-libatomic        \
+    --disable-libgomp          \
+    --disable-libquadmath      \
+    --disable-libsanitizer     \
+    --disable-libssp           \
+    --disable-libvtv           \
+    --enable-languages=c,c++   \
+    LDFLAGS_FOR_TARGET=-L$PWD/$LFS_TGT/libgcc
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Creation symlink
+```bash
+ln -sv gcc $LFS/usr/bin/cc
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf gcc-15.2.0
+```
+
+## Entrer en `chroot`
+
