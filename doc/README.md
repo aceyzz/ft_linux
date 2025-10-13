@@ -913,3 +913,34 @@ rm -rvf file-5.46
 
 #### Findutils
 
+Extraction
+```bash
+tar -xvf findutils-4.10.0.tar.xz
+cd findutils-4.10.0
+```
+
+Configuration
+```bash
+CPPFLAGS='-DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr                   \
+            --localstatedir=/var/lib/locate \
+            --host=$LFS_TGT                 \
+            --build=$(build-aux/config.guess)
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf findutils-4.10.0
+```
+
+#### Gawk
+
