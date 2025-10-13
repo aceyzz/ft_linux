@@ -970,5 +970,42 @@ time {
 }
 ```
 
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf gawk-5.3.2
+```
+
 #### Grep
+
+Extraction
+```bash
+tar -xvf grep-3.12.tar.xz
+cd grep-3.12
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(./build-aux/config.guess)
+```
+> Toujours pareil, les flags CPP
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf grep-3.12
+```
+
+#### Gzip
 
