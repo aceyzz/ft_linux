@@ -329,7 +329,8 @@ echo $LFS
 echo $LFS_TGT
 # doit retourner : 
 #   /mnt/lfs
-#   aarch64-lfs-linux-gnu # peut varier selon l'archi
+#   aarch64-lfs-linux-gnu
+# peut varier selon l'archi
 ```
 
 Accéder au dossier `sources`
@@ -662,3 +663,30 @@ rm -rf gcc-15.2.0
 ```
 
 ### Outils temporaires
+
+> Toujours en user `lfs`
+
+#### M4
+
+Extraction
+```bash
+tar -xvf m4-1.4.20.tar.xz
+cd m4-1.4.20
+```
+
+Configuration
+```bash
+CPPFLAGS='-DMB_LEN_MAX=16 -DPATH_MAX=4096' \
+./configure --prefix=/usr \
+            --host="$LFS_TGT" \
+            --build="$(build-aux/config.guess)"
+```
+> Pour une raison inconnue, ajouter les flags CPP m'a permis de faire passer la compilation
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
