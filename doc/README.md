@@ -390,3 +390,70 @@ rm -rf binutils-2.45
 
 #### GCC (pass 1)
 
+Extraction
+```bash
+tar -xvf gcc-15.2.0.tar.xz
+cd gcc-15.2.0
+```
+
+Dépendances
+```bash
+tar -xf ../mpfr-4.2.2.tar.xz
+mv -v mpfr-4.2.2 mpfr
+tar -xf ../gmp-6.3.0.tar.xz
+mv -v gmp-6.3.0 gmp
+tar -xf ../mpc-1.3.1.tar.gz
+mv -v mpc-1.3.1 mpc
+```
+
+Specificité ARM64
+```bash
+sed -e '/lp64=/s/lib64/lib/' \
+    -i.orig gcc/config/aarch64/t-aarch64-linux
+```
+
+Dossier de build
+```bash
+mkdir -v build
+cd       build
+```
+
+Configuration
+```bash
+time {
+  ../configure                  \
+    --target=$LFS_TGT         \
+    --prefix=$LFS/tools       \
+    --with-glibc-version=2.42 \
+    --with-sysroot=$LFS       \
+    --with-newlib             \
+    --without-headers         \
+    --enable-default-pie      \
+    --enable-default-ssp      \
+    --disable-nls             \
+    --disable-shared          \
+    --disable-multilib        \
+    --disable-threads         \
+    --disable-libatomic       \
+    --disable-libgomp         \
+    --disable-libquadmath     \
+    --disable-libssp          \
+    --disable-libvtv          \
+    --disable-libstdcxx       \
+    --enable-languages=c,c++
+}
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf gcc-15.2.0
+```
