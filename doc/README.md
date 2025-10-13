@@ -690,3 +690,9 @@ time {
   make DESTDIR=$LFS install -j1
 }
 ```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf m4-1.4.20
+```
