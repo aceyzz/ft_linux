@@ -1310,3 +1310,5 @@ rm -rvf gcc-15.2.0
 
 ## Entrer en `chroot`
 
+Suite [ici](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter07/chapter07.html)  
+
