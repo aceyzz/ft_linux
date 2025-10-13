@@ -696,3 +696,58 @@ Cleanup
 cd $LFS/sources
 rm -rf m4-1.4.20
 ```
+
+#### Ncurses
+
+Extraction
+```bash
+tar -xvf ncurses-6.5-20250809.tgz
+cd ncurses-6.5-20250809
+```
+
+Installation de tic
+```bash
+time {
+  mkdir build
+  pushd build
+    ../configure --prefix=$LFS/tools AWK=gawk
+    make -C include
+    make -C progs tic
+    install progs/tic $LFS/tools/bin
+  popd
+}
+```
+
+Configuration
+```bash
+time {
+  ./configure --prefix=/usr                \
+            --host=$LFS_TGT              \
+            --build=$(./config.guess)    \
+            --mandir=/usr/share/man      \
+            --with-manpage-format=normal \
+            --with-shared                \
+            --without-normal             \
+            --with-cxx-shared            \
+            --without-debug              \
+            --without-ada                \
+            --disable-stripping          \
+            AWK=gawk
+}
+```
+
+Compilation
+```bash
+make
+```
+
+Installation
+```bash
+time {
+  make DESTDIR=$LFS install
+}
+ln -sv libncursesw.so $LFS/usr/lib/libncurses.so
+sed -e 's/^#if.*XOPEN.*$/#if 1/' \
+    -i $LFS/usr/include/curses.h
+```
+
