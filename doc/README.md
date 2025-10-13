@@ -168,6 +168,37 @@ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT | grep vdb
 #	└─vdb4                    59.8G ext4        /mnt/lfs
 ```
 
+(après chaque reboot, il faudra remonter les partitions)
+```bash
+# script a lancer en root
+cat > mount_lfs.sh << "EOF"
+#!/bin/bash
+set -euo pipefail
+
+DEV_ROOT=/dev/vdb4
+DEV_BOOT=/dev/vdb2
+DEV_SWAP=/dev/vdb3
+MNT_ROOT=/mnt/lfs
+MNT_BOOT=/mnt/lfs/boot
+
+mkdir -p "$MNT_ROOT" "$MNT_BOOT"
+
+mountpoint -q "$MNT_ROOT" || mount -t ext4 "$DEV_ROOT" "$MNT_ROOT"
+mountpoint -q "$MNT_BOOT" || mount -t ext2 "$DEV_BOOT" "$MNT_BOOT"
+
+swapon --show | awk '{print $1}' | grep -qx "$DEV_SWAP" || swapon "$DEV_SWAP"
+EOF
+chmod +x mount_lfs.sh
+./mount_lfs.sh
+```
+
+(puis vérifier)
+```bash
+lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT | grep vdb
+mount | egrep 'vdb2|vdb4'
+swapon --show
+```
+
 ## Paquets et patchs
 
 Passer en root
@@ -287,4 +318,75 @@ source ~/.bash_profile
 
 ## Construction Cross toolchain et outils temporaires
 
-> Step actuelle [ici](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/part3.html)
+Passer a l'utilisateur `lfs`
+```bash
+su - lfs
+```
+
+Verifier l'environnement
+```bash
+echo $LFS
+echo $LFS_TGT
+# doit retourner : 
+#   /mnt/lfs
+#   aarch64-lfs-linux-gnu # peut varier selon l'archi
+```
+
+Accéder au dossier `sources`
+```bash
+cd $LFS/sources
+```
+
+### Compilation des paquets
+
+> Tout les programmes seront installés dans `/mnt/lfs/tools` (`$LFS/tools`). Les librairies par contre seront installées dans `/mnt/lfs/usr/lib` (`$LFS/usr/lib`), leur place definitive
+
+Pour chaque compilation, ca sera a peu pres la même chose :
+```plaintext
+- extraire le package avec `tar`
+- accéder au dossier extrait
+- suivre les instructions de compilation
+- revenir au dossier `sources` apres chaque compilation
+- supprimer le dossier extrait apres chaque compilation
+```
+
+#### Binutils (pass 1)
+
+Dossier de build
+```bash
+tar -xvf binutils-2.45.tar.xz
+cd binutils-2.45
+mkdir -v build
+cd build
+```
+
+Configuration
+```bash
+time {
+  ../configure --prefix=$LFS/tools \
+             --with-sysroot=$LFS \
+             --target=$LFS_TGT   \
+             --disable-nls       \
+             --enable-gprofng=no \
+             --disable-werror    \
+             --enable-new-dtags  \
+             --enable-default-hash-style=gnu
+}
+```
+
+Comilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rf binutils-2.45
+```
+
+#### GCC (pass 1)
+
