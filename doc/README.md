@@ -758,3 +758,41 @@ rm -rf ncurses-6.5-20250809
 ```
 
 #### Bash
+
+Extraction
+```bash
+tar -xvf bash-5.3.tar.gz
+cd bash-5.3
+```
+
+Configuration
+```bash
+time {
+  ./configure --prefix=/usr                      \
+            --build=$(sh support/config.guess) \
+            --host=$LFS_TGT                    \
+            --without-bash-malloc
+}
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make DESTDIR=$LFS install
+}
+```
+
+Linkage
+```bash
+ln -sv bash $LFS/bin/sh
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf bash-5.3
+```
+
+#### Coreutils
+
