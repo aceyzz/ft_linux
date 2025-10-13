@@ -1009,3 +1009,31 @@ rm -rvf grep-3.12
 
 #### Gzip
 
+Extraction
+```bash
+tar -xvf gzip-1.14.tar.xz
+cd gzip-1.14
+```
+
+Configuration
+```bash
+CPPFLAGS='-I. -I./lib -DMB_LEN_MAX=16 -DPATH_MAX=4096 -D_POSIX_ARG_MAX=4096' \
+./configure --prefix=/usr --host=$LFS_TGT
+```
+
+Compilation et installation
+```bash
+time {
+  make -j1
+  make DESTDIR=$LFS install -j1
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf gzip-1.14
+```
+
+#### Make
+
