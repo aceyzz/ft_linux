@@ -1697,3 +1697,22 @@ rm -rvf util-linux-2.41.1
 
 ### Cleanup et sauvegarde du systeme de fichier temporaire
 
+#### Cleanup
+
+Supprimer documentation inutile
+```bash
+rm -rvf /usr/share/{info,man,doc}/*
+```
+
+Supprimer fichiers `.la` par sécurité
+```bash
+find /usr/{lib,libexec} -name \*.la -delete
+```
+
+Supprimer dossier `/tools`
+```bash
+rm -rvf /tools
+```
+
+#### Backup
+
