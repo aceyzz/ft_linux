@@ -1652,3 +1652,48 @@ rm -rvf texinfo-7.2
 
 #### Util-linux
 
+Extraction
+```bash
+tar -xvf util-linux-2.41.1.tar.xz
+cd util-linux-2.41.1
+```
+
+Creation dossier `hwclock`
+```bash
+mkdir -pv /var/lib/hwclock
+```
+
+Configuration
+```bash
+./configure --libdir=/usr/lib     \
+            --runstatedir=/run    \
+            --disable-chfn-chsh   \
+            --disable-login       \
+            --disable-nologin     \
+            --disable-su          \
+            --disable-setpriv     \
+            --disable-runuser     \
+            --disable-pylibmount  \
+            --disable-static      \
+            --disable-liblastlog2 \
+            --without-python      \
+            ADJTIME_PATH=/var/lib/hwclock/adjtime \
+            --docdir=/usr/share/doc/util-linux-2.41.1
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd /sources
+rm -rvf util-linux-2.41.1
+```
+
+### Cleanup et sauvegarde du systeme de fichier temporaire
+
