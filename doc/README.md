@@ -1371,6 +1371,8 @@ chroot "$LFS" /usr/bin/env -i   \
 ```
 > Nous sommes maintenant dans le `chroot`. Si vous voyez `I have no name!` dans le prompt, c'est normal, le fichier `/etc/passwd` n'existe pas encore
 
+A partir d'ici, si pour une raison quelconque vous sortez du `chroot` (reboot par exemple), il vous faudra reprendre les étapes depuis le début de la section [`chroot`](#chroot) pour s'assurer des mountpoints, ownerships etc. Voir [ici](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter07/chroot.html) pour plus d'informations
+
 ### Créer les dossiers nécessaires
 
 `root` level
@@ -1488,3 +1490,36 @@ chmod -v 600  /var/log/btmp
 ### Packages
 
 > Toujours en root dans le chroot
+
+Meme procédure que pour la cross-toolchain : extraction, configuration, compilation, installation, cleanup  
+
+#### Gettext
+
+Extraction
+```bash
+tar -xvf gettext-0.26.tar.xz
+cd gettext-0.26
+```
+
+Configuration
+```bash
+./configure --disable-shared
+```
+
+Compilation
+```bash
+make
+```
+
+`msgfmt`, `msgmerge`, `xgettext`
+```bash
+cp -v gettext-tools/src/{msgfmt,msgmerge,xgettext} /usr/bin
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf gettext-0.26
+```
+
+#### Bison
