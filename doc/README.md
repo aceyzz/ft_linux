@@ -1995,3 +1995,37 @@ mkdir -pv /etc/ld.so.conf.d
 #### Zlib
 
 Suite ici : https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter08/glibc.html
+
+(Apres chaque reboot)
+
+root
+```bash
+sudo su -
+```
+
+mount /dev, /proc, /sys, /run
+```bash
+mount -v --bind /dev  $LFS/dev
+mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
+mount -vt proc  proc  $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs tmpfs $LFS/run
+# Cas où /dev/shm est un lien symbolique vers /run/shm :
+if [ -h $LFS/dev/shm ]; then
+  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
+fi
+```
+
+Re-entrer dans le chroot
+```bash
+chroot "$LFS" /usr/bin/env -i   \
+    HOME=/root                  \
+    TERM="$TERM"                \
+    PS1='(lfs chroot) \u:\w\$ ' \
+    PATH=/usr/bin:/usr/sbin     \
+    MAKEFLAGS="-j$(nproc)"      \
+    TESTSUITEFLAGS="-j$(nproc)" \
+    /bin/bash --login
+```
+
+Et c'est reparti
