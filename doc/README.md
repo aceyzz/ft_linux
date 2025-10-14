@@ -1523,3 +1523,32 @@ rm -rvf gettext-0.26
 ```
 
 #### Bison
+
+Extraction
+```bash
+tar -xvf bison-3.8.2.tar.xz
+cd bison-3.8.2
+```
+
+Configuration
+```bash
+./configure --prefix=/usr \
+            --docdir=/usr/share/doc/bison-3.8.2
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf bison-3.8.2
+```
+
+#### Perl
+
