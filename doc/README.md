@@ -1518,7 +1518,7 @@ cp -v gettext-tools/src/{msgfmt,msgmerge,xgettext} /usr/bin
 
 Cleanup
 ```bash
-cd $LFS/sources
+cd /sources
 rm -rvf gettext-0.26
 ```
 
@@ -1546,7 +1546,7 @@ time {
 
 Cleanup
 ```bash
-cd $LFS/sources
+cd /sources
 rm -rvf bison-3.8.2
 ```
 
@@ -1582,7 +1582,7 @@ time {
 
 Cleanup
 ```bash
-cd $LFS/sources
+cd /sources
 rm -rvf perl-5.42.0
 ```
 
@@ -1619,9 +1619,36 @@ time {
 
 Cleanup
 ```bash
-cd $LFS/sources
+cd /sources
 rm -rvf Python-3.13.7
 ```
 
 #### Texinfo
+
+Extraction
+```bash
+tar -xvf texinfo-7.2.tar.xz
+cd texinfo-7.2
+```
+
+Configuration
+```bash
+./configure --prefix=/usr
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd /sources
+rm -rvf texinfo-7.2
+```
+
+#### Util-linux
 
