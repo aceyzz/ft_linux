@@ -1588,3 +1588,40 @@ rm -rvf perl-5.42.0
 
 #### Python
 
+> attention a bien prendre le package avec la majuscule `P` (dans notre cas, `Python-3.13.7.tar.xz`)
+
+Extraction
+```bash
+tar -xvf Python-3.13.7.tar.xz
+cd Python-3.13.7
+```
+
+Configuration
+```bash
+./configure --prefix=/usr       \
+            --enable-shared     \
+            --without-ensurepip \
+            --without-static-libpython
+```
+
+Compilation
+```bash
+make
+```
+> Plusieurs modules de python3 ne peuvent pas etre installés à cause de dependances manquantes (comme `ssl`), c'est normal. Toutefois, faites juste bien attention que la commande `make` se termine sans erreur avec `echo $?` qui doit retourner `0`
+
+Installation
+```bash
+time {
+  make install
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf Python-3.13.7
+```
+
+#### Texinfo
+
