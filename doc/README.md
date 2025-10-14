@@ -1552,3 +1552,39 @@ rm -rvf bison-3.8.2
 
 #### Perl
 
+Extraction
+```bash
+tar -xvf perl-5.42.0.tar.xz
+cd perl-5.42.0
+```
+
+Configuration
+```bash
+sh Configure -des                                         \
+             -D prefix=/usr                               \
+             -D vendorprefix=/usr                         \
+             -D useshrplib                                \
+             -D privlib=/usr/lib/perl5/5.42/core_perl     \
+             -D archlib=/usr/lib/perl5/5.42/core_perl     \
+             -D sitelib=/usr/lib/perl5/5.42/site_perl     \
+             -D sitearch=/usr/lib/perl5/5.42/site_perl    \
+             -D vendorlib=/usr/lib/perl5/5.42/vendor_perl \
+             -D vendorarch=/usr/lib/perl5/5.42/vendor_perl
+```
+
+Compilation et installation
+```bash
+time {
+  make
+  make install
+}
+```
+
+Cleanup
+```bash
+cd $LFS/sources
+rm -rvf perl-5.42.0
+```
+
+#### Python
+
