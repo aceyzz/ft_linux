@@ -1714,5 +1714,46 @@ Supprimer dossier `/tools`
 rm -rvf /tools
 ```
 
-#### Backup
+#### Backup (facultatif, mais conseillé)
+
+**Précautions** :
+
+- Attention : cette etape est facultative, mais fortement recommandée, parce que flemme de recommencer tout depuis le début si on foire quelque chose.  
+- Toute ces etapes doivent etre realisées en dehors du `chroot`, donc sortir du `chroot` avec `exit` ou `Ctrl+D` (sinon tu vas mettre oú la backup ?)  
+- Derniere chose : faut etre en `root`, et s'assurer que l'env $LFS est bien set (sinon, `export LFS=/mnt/lfs`)  
+
+Unmount le systeme de fichier kernel virtuel
+```bash
+mountpoint -q $LFS/dev/shm && umount $LFS/dev/shm
+umount $LFS/dev/pts
+umount $LFS/{sys,proc,run,dev}
+```
+
+S'assurer de la place disponible pour la backup
+```bash
+df -h $LFS
+```
+> S'assurer d'au moins 2GB de libre, la backup sera placée dans `$HOME` du `root` par défaut
+
+Backup
+```bash
+cd $LFS
+tar -cJpf $HOME/lfs-temp-tools-arm64-r12.4-15.tar.xz .
+```
+> Compter au moins 10mins pour cette étape, petit café ?
+
+#### (HELP!) Restore
+
+En cas de problème (crash, commande mal passée etc), il est possible de restaurer la backup précédemment faite.  
+Présumes que tu es en `root` sur le système host, et que `$LFS` est bien set
+```bash
+export LFS=/mnt/lfs
+cd $LFS
+rm -rf ./*
+tar -xpf $HOME/lfs-temp-tools-arm64-r12.4-15.tar.xz
+```
+
+Attention aux mount et de bien réentrer dans le `chroot` ([voir ici pour plus de détails](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter07/kernfs.html), [puis ici](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter07/chroot.html))
+
+## Construction système LFS
 
