@@ -1757,3 +1757,38 @@ Attention aux mount et de bien réentrer dans le `chroot` ([voir ici pour plus d
 
 ## Construction système LFS
 
+Redémarrer dans le `chroot` (si tu as fait une restore, il faut refaire les mountpoints)  
+Voir [ici](#entrer-dans-le-chroot) pour les détails
+
+### Installation Basic System Software
+
+> Si c'est ta première fois, évite les customisations et optimisations custom. Vaut mieux suivre le guide à la lettre (et ce tuto donc, qui va + droit au but)  
+
+> Meme principe que pour les étapes précédentes : extraction, configuration, compilation, installation, cleanup
+
+#### Man-pages
+
+Extraction
+```bash
+tar -xvf man-pages-6.15.tar.xz
+cd man-pages-6.15
+```
+
+Supprimer les pages `man3/crypt*`
+```bash
+rm -v man3/crypt*
+```
+
+Installation
+```bash
+make -R GIT=false prefix=/usr install
+```
+
+Cleanup
+```bash
+cd /sources
+rm -rvf man-pages-6.15
+```
+
+#### Iana-Etc
+
