@@ -2000,7 +2000,7 @@ rm -rvf glibc-2.42
 
 #### Zlib
 
-Suite ici : https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter08/glibc.html
+Suite ici : https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter08/zlib.html
 
 
 ---
