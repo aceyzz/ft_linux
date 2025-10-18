@@ -5135,11 +5135,96 @@ userdel -r tester
 
 ## Configuration système
 
-([suite ici](https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter09/chapter09.html))
+Ici, nous allons configurer System V avec le module loader `udev` qui valide la contrainte du sujet. Ces scripts de demarrage l'init et shutdown propre de notre systeme (montage, swap, reseau, etc...)  
 
-A faire au prochain reboot : 
+### LFS-bootscripts
 
-Root
+Extraction
+```bash
+tar -xvf lfs-bootscripts-20250827.tar.xz
+cd lfs-bootscripts-20250827
+```
+
+Installation
+```bash
+make install
+```
+
+Cleanup
+```bash
+cd /sources
+rm -rvf lfs-bootscripts-20250827
+```
+
+### Configuration réseau
+
+Attention: adapter les fichiers en fonction de la configuration reseau de votre VM (DHCP, IP statique, hosts et hostnames, etc...)
+
+Pour ma part, la voici (configuration par défaut UTM)
+```bash
+cat > /etc/sysconfig/ifconfig.enp0s1 << "EOF"
+ONBOOT=yes
+IFACE=enp0s1
+SERVICE=ipv4-static
+IP=192.168.64.7
+GATEWAY=192.168.64.1
+PREFIX=24
+BROADCAST=192.168.64.255
+EOF
+```
+
+Configuration DNS
+```bash
+cat > /etc/resolv.conf << "EOF"
+# Begin /etc/resolv.conf
+domain localdomain
+nameserver 192.168.64.1
+nameserver 1.1.1.1    # cloudflare
+nameserver 8.8.8.8    # google
+# End /etc/resolv.conf
+EOF
+```
+> J'ai choisi Cloudflare et Google comme DNS publics, mais vous pouvez en choisir d'autres
+
+Hostname
+```bash
+echo "<votre-login-42>" > /etc/hostname
+```
+> Remplacer `<votre-login-42>` par votre login ex: `cedmulle` pour ma part
+
+Hosts
+```bash
+cat > /etc/hosts << "EOF"
+# Begin /etc/hosts
+127.0.0.1   localhost.localdomain localhost
+127.0.1.1   cedmulle.localdomain cedmulle
+192.168.64.7 cedmulle.localdomain cedmulle
+::1         localhost ip6-localhost ip6-loopback
+ff02::1     ip6-allnodes
+ff02::2     ip6-allrouters
+# End /etc/hosts
+EOF
+```
+
+Test
+```bash
+cat /etc/sysconfig/ifconfig.enp0s1
+cat /etc/resolv.conf
+cat /etc/hostname
+cat /etc/hosts
+```
+> verifier que ces fichiers ont bien ete crées correctement
+
+### Configuration SysVinit
+
+Pendant l'init du kernel, le premier programme qui est lancé est `init` (SysVinit dans notre cas). Il va lire le fichier `/etc/inittab` pour savoir quoi faire. Nous allons le configurer
+
+(a venir)
+https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter09/usage.html
+
+A faire au prochain boot:
+
+root
 ```bash
 sudo su -
 ```
@@ -5166,7 +5251,7 @@ if [ -h $LFS/dev/shm ]; then
 fi
 ```
 
-Chroot
+Re-entrer dans le chroot
 ```bash
 chroot "$LFS" /usr/bin/env -i   \
     HOME=/root                  \
