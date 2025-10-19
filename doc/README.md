@@ -5612,3 +5612,13 @@ EOF
 
 ## Finalisation
 
+Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause. Je penses a installer :
+```
+curl
+wget
+git
+ssh
+desktop environment (xfce, parce que je le connais bien et il est leger)
+```
+
+Je reprendrais ici : https://www.linuxfromscratch.org/blfs/view/stable-systemd/introduction/which.html
