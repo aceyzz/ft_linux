@@ -5368,47 +5368,184 @@ EOF
 
 ## Rendre le LFS bootable
 
-suite ici : https://www.linuxfromscratch.org/~xry111/lfs/view/arm64/chapter10/chapter10.html
+### Creer le fichier /etc/fstab
 
-Prochain boot : 
-
-root
+A la place de faire comme le livre et baser le fstab sur les labels de partitions (ce qui est plus complique a gerer dans une VM), on va utiliser les UUID des partitions. Pour cela, il faut d'abord recuperer les UUID ([source ici](https://liquidat.wordpress.com/2013/03/13/uuids-and-linux-everything-you-ever-need-to-know/))
 ```bash
-sudo su -
+lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT,UUID
+blkid
+```
+> Recuperer les UUID des partitions pour `/`, `/swap` et `/boot`
+> Pour ma part, c'est respectivement `vdb4`, `vdb3` et `vdb2`
+
+Ensuite, creer le fichier `/etc/fstab` selon les UUID retournés
+```bash
+cat > /etc/fstab << "EOF"
+# Begin /etc/fstab
+
+# file system                       mount-point  type     options                      dump  fsck
+# -------------------------------------------------------------------------------------------------
+UUID=cd54ee11-1246-47c8-87cb-0b4aae1b41ff   /          ext4     defaults                     1     1
+UUID=c24b22fc-6216-43ad-9f10-188680f2bf4b   /boot      ext2     defaults                     1     2
+UUID=ee634771-88f8-491d-9850-89aa04f952d0   swap       swap     pri=1                        0     0
+
+proc            /proc          proc     nosuid,noexec,nodev         0     0
+sysfs           /sys           sysfs    nosuid,noexec,nodev         0     0
+devpts          /dev/pts       devpts   gid=5,mode=620              0     0
+tmpfs           /run           tmpfs    defaults                    0     0
+devtmpfs        /dev           devtmpfs mode=0755,nosuid            0     0
+tmpfs           /dev/shm       tmpfs    nosuid,nodev                0     0
+cgroup2         /sys/fs/cgroup cgroup2  nosuid,noexec,nodev         0     0
+
+# End /etc/fstab
+EOF
+```
+> Attention a bien remplacer tes UUID ! 
+
+### Installer le kernel Linux
+
+Nous y sommes, le point crucial
+
+Preparer l'arborescence
+```bash
+cd /sources
+tar -xvf linux-6.16.1.tar.xz
+cd linux-6.16.1
 ```
 
-Montages
+First clean
 ```bash
-export LFS=/mnt/lfs
-
-mkdir -pv $LFS
-mount -v /dev/vdb4 $LFS
-mkdir -pv $LFS/{boot,dev,proc,sys,run}
-mount -v /dev/vdb2 $LFS/boot
-
-swapon -v /dev/vdb3
-
-mount -v --bind /dev $LFS/dev
-mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
-mount -vt proc proc $LFS/proc
-mount -vt sysfs sysfs $LFS/sys
-mount -vt tmpfs tmpfs $LFS/run
-
-if [ -h $LFS/dev/shm ]; then
-  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
-fi
+make mrproper
 ```
 
-Re-entrer dans le chroot
+Config minimale sure selon votre archi
 ```bash
-chroot "$LFS" /usr/bin/env -i   \
-    HOME=/root                  \
-    TERM="$TERM"                \
-    PS1='(lfs chroot) \u:\w\$ ' \
-    PATH=/usr/bin:/usr/sbin     \
-    MAKEFLAGS="-j$(nproc)"      \
-    TESTSUITEFLAGS="-j$(nproc)" \
-    /bin/bash --login
+make defconfig
 ```
 
-Et c'est reparti
+Lancer la configuration du kernel
+```bash
+make menuconfig
+```
+
+Verifier les options suivantes
+```plaintext
+General setup --->
+  [*] Local version - append to kernel release                    [LOCALVERSION]
+  # On met la LOCALVERSION a notre login42 "-cedmulle" pour etre conforme avec le sujet
+  [ ] Compile the kernel with warnings as errors                        [WERROR]
+  CPU/Task time and stats accounting --->
+    [*] Pressure stall information tracking                                [PSI]
+    [ ]   Require boot parameter to enable pressure stall information tracking
+                                                     ...  [PSI_DEFAULT_DISABLED]
+  < > Enable kernel headers through /sys/kernel/kheaders.tar.xz      [IKHEADERS]
+  [*] Control Group support --->                                       [CGROUPS]
+    [*] Memory controller                                                [MEMCG]
+  [ ] Configure standard kernel features (expert users) --->            [EXPERT]
+
+Kernel Features --->
+  [*] Build a relocatable kernel image                             [RELOCATABLE]
+  [*] Randomize the address of the kernel image                 [RANDOMIZE_BASE]
+
+Boot options --->
+  [*] UEFI runtime support                                                 [EFI]
+
+General architecture-dependent options --->
+  [*] Stack Protector buffer overflow detection                 [STACKPROTECTOR]
+  [*]   Strong Stack Protector                           [STACKPROTECTOR_STRONG]
+
+Device Drivers --->
+  Generic Driver Options --->
+    [ ] Support for uevent helper                                [UEVENT_HELPER]
+    [*] Maintain a devtmpfs filesystem to mount at /dev               [DEVTMPFS]
+    [*]   Automount devtmpfs at /dev, after the kernel mounted the rootfs
+                                                           ...  [DEVTMPFS_MOUNT]
+  Firmware Drivers --->
+    [*] Mark VGA/VBE/EFI FB as generic system framebuffer       [SYSFB_SIMPLEFB]
+    EFI (Extensible Firmware Interface) Support --->
+      [*] Enable the generic EFI decompressor                        [EFI_ZBOOT]
+  Graphics support --->
+    <*>    Direct Rendering Manager (XFree86 4.1.0 and higher DRI support) --->
+                                                                      ...  [DRM]
+    [*]    Display a user-friendly message when a kernel panic occurs
+                                                                ...  [DRM_PANIC]
+    (kmsg)   Panic screen formatter                           [DRM_PANIC_SCREEN]
+    Supported DRM clients --->
+      [*] Enable legacy fbdev support for your modesetting driver
+                                                      ...  [DRM_FBDEV_EMULATION]
+    Drivers for system framebuffers --->
+      <*> Simple framebuffer driver                              [DRM_SIMPLEDRM]
+    Console display driver support --->
+      [*] Framebuffer Console support                      [FRAMEBUFFER_CONSOLE]
+```
+
+Compiler
+```bash
+make -j$(nproc)
+```
+
+Installer les modules
+```bash
+make modules_install
+```
+
+Verifier l'installation
+```bash
+ls -l arch/arm64/boot/vmlinuz.efi
+file arch/arm64/boot/vmlinuz.efi
+# Doit retourner : 
+#   -rwxr-xr-x 1 root root 14701056 Oct 19 12:40 arch/arm64/boot/vmlinuz.efi
+#   arch/arm64/boot/vmlinuz.efi: PE32+ executable for EFI (application), ARM64 (stripped to external PDB), 2 sections
+# Peut varier selon la version du kernel et l'architecture
+```
+
+Monter la partition `/boot` et copier le kernel
+```bash
+mountpoint -q /boot || mount /boot
+cp -iv arch/arm64/boot/vmlinuz.efi /boot/vmlinuz-6.16.1-cedmulle
+```
+> Remplacer `cedmulle` par votre login42
+
+Copier fichiers de configuration du kernel
+```bash
+cp -iv System.map /boot/System.map-6.16.1
+cp -iv .config    /boot/config-6.16.1
+```
+
+Verification que tout se soit bien passé
+```bash
+ls -l /boot
+# Doit retourner quelque chose comme :
+#    config-6.16.1
+#    System.map-6.16.1
+#    vmlinuz-6.16.1-cedmulle
+```
+
+Copier la documentation
+```bash
+cp -r Documentation -T /usr/share/doc/linux-6.16.1
+```
+
+Le sujet nous demande ca : `The kernel sources must be in /usr/src/kernel-$(version)`  
+Alors on va faire ce qu'on nous demande
+```bash
+cd /sources
+mv linux-6.16.1 /usr/src/kernel-6.16.1
+chown -R 0:0 /usr/src/kernel-6.16.1
+```
+
+Configurer Linux Module Load Order
+```bash
+install -v -m755 -d /etc/modprobe.d
+cat > /etc/modprobe.d/usb.conf << "EOF"
+# Begin /etc/modprobe.d/usb.conf
+
+install ohci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i ohci_hcd ; true
+install uhci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i uhci_hcd ; true
+
+# End /etc/modprobe.d/usb.conf
+EOF
+```
+
+### Installer et configurer GRUB
+
