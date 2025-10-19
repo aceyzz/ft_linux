@@ -5469,6 +5469,7 @@ Device Drivers --->
                                                                       ...  [DRM]
     [*]    Display a user-friendly message when a kernel panic occurs
                                                                 ...  [DRM_PANIC]
+    [*]    Virtio GPU driver                                    [DRM_VIRTIO_GPU]
     (kmsg)   Panic screen formatter                           [DRM_PANIC_SCREEN]
     Supported DRM clients --->
       [*] Enable legacy fbdev support for your modesetting driver
@@ -5548,4 +5549,66 @@ EOF
 ```
 
 ### Installer et configurer GRUB
+
+Creer le mountpoint
+```bash
+mkdir -pv /boot/efi
+```
+
+Ajout de la partition boot du LFS dans `/etc/fstab`
+```bash
+cat >> /etc/fstab << "EOF"
+UUID=663E-9662  /boot/efi  vfat  umask=0077  0  0
+EOF
+```
+> Remplacer l'UUID par celui de votre partition `/boot/efi` (vfat)
+
+Monter la partition
+```bash
+mount /boot/efi
+```
+
+Check
+```bash
+ls -l /boot/efi
+lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT,UUID
+```
+
+Backup de l'EFI de la machine hote (optionnel mais recommande)
+```bash
+mkdir -pv /boot/efi/EFI/backup
+cp -av /boot/efi/EFI/BOOT /boot/efi/EFI/backup/BOOT-original
+```
+
+Installer GRUB
+```bash
+grub-install --removable
+```
+
+Configurer GRUB
+```bash
+cat > /boot/grub/grub.cfg << "EOF"
+# Begin /boot/grub/grub.cfg
+set default=0
+set timeout=5
+
+insmod part_gpt
+insmod ext2
+insmod efi_gop
+
+search --set=root --fs-uuid cd54ee11-1246-47c8-87cb-0b4aae1b41ff
+
+menuentry "GNU/Linux 6.16.1 (LFS - cedmulle)" {
+    linux /boot/vmlinuz-6.16.1-cedmulle root=PARTUUID=557f28c8-5006-6f4a-b73d-eb11e6468a1d ro
+}
+# End /boot/grub/grub.cfg
+EOF
+```
+> Remplacer les occurences de `cedmulle` par votre login 42
+> Remplacer `PARTUUID=[...]` par le PARTUUID de votre partition
+> Pour recuperer le PARTUUID, utiliser la commande `blkid` et copier la valeur associee a la partition racine `/` 
+
+**Ca y est, enfin. Nous avons terminé l'installation de notre LFS. Maintenant, il ne reste plus qu'a redemarrer et tester !**
+
+## Finalisation
 
