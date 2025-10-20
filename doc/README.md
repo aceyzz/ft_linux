@@ -5612,13 +5612,238 @@ EOF
 
 ## Finalisation
 
-Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause. Je penses a installer :
-```
-curl
-wget
-git
-ssh
-desktop environment (xfce, parce que je le connais bien et il est leger)
+### Installation `wget`
+
+Il y a quelques dependances a installer avant `wget`
+
+libunistring
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://ftp.gnu.org/gnu/libunistring/libunistring-1.4.1.tar.xz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf libunistring-1.4.1.tar.xz
+cd libunistring-1.4.1
+./configure --prefix=/usr    \
+            --disable-static \
+            --docdir=/usr/share/doc/libunistring-1.4.1 &&
+make
+# installer
+make install
+cd /sources
+rm -rvf libunistring-1.4.1
 ```
 
-Je reprendrais ici : https://www.linuxfromscratch.org/blfs/view/stable-systemd/introduction/which.html
+libidn2
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://ftp.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf libidn2-2.3.8.tar.gz
+cd libidn2-2.3.8
+./configure --prefix=/usr --disable-static &&
+make
+make check
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf libidn2-2.3.8
+```
+
+libpsl
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf libpsl-0.21.5.tar.gz
+cd libpsl-0.21.5
+mkdir build &&
+cd    build &&
+meson setup --prefix=/usr --buildtype=release &&
+ninja
+ninja test
+# installer
+ninja install
+# cleanup
+cd /sources
+rm -rvf libpsl-0.21.5
+```
+
+libtasn1
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.20.0.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf libtasn1-4.20.0.tar.gz
+cd libtasn1-4.20.0
+./configure --prefix=/usr --disable-static &&
+make
+make check
+# installer
+make install
+make -C doc/reference install-data-local
+# cleanup
+cd /sources
+rm -rvf libtasn1-4.20.0
+```
+
+p11-kit
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://github.com/p11-glue/p11-kit/releases/download/0.25.10/p11-kit-0.25.10.tar.xz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf p11-kit-0.25.10.tar.xz
+cd p11-kit-0.25.10
+# patch pour compatibilite LFS
+sed '20,$ d' -i trust/trust-extract-compat &&
+cat >> trust/trust-extract-compat << "EOF"
+# Copy existing anchor modifications to /etc/ssl/local
+/usr/libexec/make-ca/copy-trust-modifications
+
+# Update trust stores
+/usr/sbin/make-ca -r
+EOF
+# build
+mkdir p11-build &&
+cd    p11-build &&
+meson setup .. \
+      --prefix=/usr \
+      --buildtype=release \
+      -D trust_paths=/etc/pki/anchors &&
+ninja
+ninja test
+# installer
+ninja install
+
+ln -sfv /usr/libexec/p11-kit/trust-extract-compat /usr/bin/update-ca-certificates
+ln -sfv ./pkcs11/p11-kit-trust.so /usr/lib/libnssckbi.so
+cd /sources
+rm -rvf p11-kit-0.25.10
+```
+
+make-ca
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://github.com/lfs-book/make-ca/archive/v1.16.1/make-ca-1.16.1.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf make-ca-1.16.1.tar.gz
+cd make-ca-1.16.1
+make install && install -vdm755 /etc/ssl/local
+# update des certificats
+/usr/sbin/make-ca -g
+# cleanup
+cd /sources
+rm -rvf make-ca-1.16.1
+```
+
+wget
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://ftp.gnu.org/gnu/wget/wget-1.25.0.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf wget-1.25.0.tar.gz
+cd wget-1.25.0
+./configure --prefix=/usr      \
+            --sysconfdir=/etc  \
+            --with-ssl=openssl &&
+make
+make check
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf wget-1.25.0
+```
+> C'est normal que les tests fait par `make check` retournent des erreurs, a ignorer
+
+### Installation `cURL`
+
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://curl.se/download/curl-8.15.0.tar.xz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf curl-8.15.0.tar.xz
+cd curl-8.15.0
+./configure --prefix=/usr    \
+            --disable-static \
+            --with-openssl   \
+            --with-ca-path=/etc/ssl/certs &&
+make
+make test
+# installer
+make install &&
+
+rm -rf docs/examples/.deps &&
+
+find docs \( -name Makefile\* -o  \
+             -name \*.1       -o  \
+             -name \*.3       -o  \
+             -name CMakeLists.txt \) -delete &&
+
+cp -v -R docs -T /usr/share/doc/curl-8.15.0
+# test
+curl --trace-ascii debugdump.txt https://www.example.com/
+curl --trace-ascii d.txt --trace-time https://example.com/
+# visualiser les fichiers de trace avec `cat debugdump.txt` et `cat d.txt`
+# cleanup
+cd /sources
+rm -rvf curl-8.15.0
+```
+
+### Installation `ssh`
+
+```bash
+# a telecharger dans /sources depuis l'host ubuntu
+wget https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.0p1.tar.gz
+# entrer dans le chroot !!
+cd /sources
+tar -xvf openssh-10.0p1.tar.gz
+cd openssh-10.0p1
+install -v -g sys -m700 -d /var/lib/sshd &&
+
+groupadd -g 50 sshd        &&
+useradd  -c 'sshd PrivSep' \
+         -d /var/lib/sshd  \
+         -g sshd           \
+         -s /bin/false     \
+         -u 50 sshd
+# configuration
+./configure --prefix=/usr                            \
+            --sysconfdir=/etc/ssh                    \
+            --with-privsep-path=/var/lib/sshd        \
+            --with-default-path=/usr/bin             \
+            --with-superuser-path=/usr/sbin:/usr/bin \
+            --with-pid-dir=/run                      &&
+make
+make -j1 tests
+# installer
+make install &&
+install -v -m755    contrib/ssh-copy-id /usr/bin     &&
+
+install -v -m644    contrib/ssh-copy-id.1 \
+                    /usr/share/man/man1              &&
+install -v -m755 -d /usr/share/doc/openssh-10.0p1     &&
+install -v -m644    INSTALL LICENCE OVERVIEW README* \
+                    /usr/share/doc/openssh-10.0p1
+# cleanup
+cd /sources
+rm -rvf openssh-10.0p1
+```
+
+### suite
+
+Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause. Je penses a installer :
+
+~~wget~~  
+~~curl~~  
+~~ssh~~  
+git  
+desktop environment (xfce, parce que je le connais bien et il est leger)
