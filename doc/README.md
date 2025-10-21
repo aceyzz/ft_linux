@@ -5838,6 +5838,369 @@ cd /sources
 rm -rvf openssh-10.0p1
 ```
 
+Configuration de base pour sshd
+```bash
+# modifier config par defaut
+sed -i 's/^#Port .*/Port 2222/' /etc/ssh/sshd_config
+sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+/usr/sbin/sshd -t
+
+# genere cles hosts et dossier run
+ssh-keygen -A
+install -d -m755 -o root -g root /run/sshd
+
+# demarrer a la mano
+/usr/sbin/sshd -p 2222
+
+# script SysV d’autostart
+cat > /etc/rc.d/init.d/sshd << "EOF"
+#!/bin/sh
+# /etc/rc.d/init.d/sshd: start/stop OpenSSH server
+
+. /lib/lsb/init-functions
+
+SSHD=/usr/sbin/sshd
+PIDFILE=/run/sshd.pid
+CONF=/etc/ssh/sshd_config
+
+case "$1" in
+  start)
+    log_info_msg "Starting sshd..."
+    install -d -m755 -o root -g root /run/sshd
+    $SSHD -t -f $CONF || { log_failure_msg "config error"; exit 1; }
+    start_daemon -p "$PIDFILE" $SSHD -p 2222
+    evaluate_retval
+    ;;
+  stop)
+    log_info_msg "Stopping sshd..."
+    killproc -p "$PIDFILE" $SSHD
+    evaluate_retval
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  status)
+    statusproc -p "$PIDFILE" $SSHD
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 2
+    ;;
+esac
+EOF
+chmod +x /etc/rc.d/init.d/sshd
+
+# activer dans les runlevels (S au boot multiuser, K à l’arrêt)
+cd /etc/rc.d
+ln -sfv ../init.d/sshd rc0.d/K30sshd
+ln -sfv ../init.d/sshd rc1.d/K30sshd
+ln -sfv ../init.d/sshd rc2.d/S30sshd
+ln -sfv ../init.d/sshd rc3.d/S30sshd
+ln -sfv ../init.d/sshd rc4.d/S30sshd
+ln -sfv ../init.d/sshd rc5.d/S30sshd
+ln -sfv ../init.d/sshd rc6.d/K30sshd
+
+# check
+/etc/rc.d/init.d/sshd status
+ss -tnlp | grep ':2222' || netstat -tnlp | grep ':2222'
+```
+**On peut maintenant se connecter en SSH a notre LFS sans passer par la machine hote**
+
+### Installation `sudo`
+
+Maintenant que nous sommes en `ssh`, et que `wget` est installé, on peut installer sudo sans passer par le host
+```bash
+wget https://www.sudo.ws/dist/sudo-1.9.17p2.tar.gz
+tar -xvf sudo-1.9.17p2.tar.gz
+cd sudo-1.9.17p2
+# configuration
+./configure --prefix=/usr         \
+            --libexecdir=/usr/lib \
+            --with-secure-path    \
+            --with-env-editor     \
+            --docdir=/usr/share/doc/sudo-1.9.17p2 \
+            --with-passprompt="[sudo] password for %p: " &&
+make
+# check
+env LC_ALL=C make check |& tee make-check.log
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf sudo-1.9.17p2
+```
+
+### Installation `git`
+
+Installation de asciidoc pour documentation (dependance de git)
+```bash
+wget https://files.pythonhosted.org/packages/source/a/asciidoc/asciidoc-10.2.1.tar.gz
+tar -xvf asciidoc-10.2.1.tar.gz
+cd asciidoc-10.2.1
+pip3 wheel -w dist --no-build-isolation --no-deps --no-cache-dir $PWD
+pip3 install --no-index --find-links dist --no-user asciidoc
+# cleanup
+cd /sources
+rm -rvf asciidoc-10.2.1
+```
+
+```bash
+wget https://www.kernel.org/pub/software/scm/git/git-2.50.1.tar.xz
+tar -xvf git-2.50.1.tar.xz
+cd git-2.50.1
+# configuration
+./configure --prefix=/usr \
+            --with-gitconfig=/etc/gitconfig \
+            --with-python=python3 &&
+make
+# documentation
+make html
+make htmldir=/usr/share/doc/git-2.50.1 install-html
+# reorganise la doc
+mkdir -vp /usr/share/doc/git-2.50.1/man-pages/{html,text}         &&
+mv        /usr/share/doc/git-2.50.1/{git*.adoc,man-pages/text}     &&
+mv        /usr/share/doc/git-2.50.1/{git*.,index.,man-pages/}html &&
+
+mkdir -vp /usr/share/doc/git-2.50.1/technical/{html,text}         &&
+mv        /usr/share/doc/git-2.50.1/technical/{*.adoc,text}        &&
+mv        /usr/share/doc/git-2.50.1/technical/{*.,}html           &&
+
+mkdir -vp /usr/share/doc/git-2.50.1/howto/{html,text}             &&
+mv        /usr/share/doc/git-2.50.1/howto/{*.adoc,text}            &&
+mv        /usr/share/doc/git-2.50.1/howto/{*.,}html               &&
+
+sed -i '/^<a href=/s|howto/|&html/|' /usr/share/doc/git-2.50.1/howto-index.html &&
+sed -i '/^\* link:/s|howto/|&html/|' /usr/share/doc/git-2.50.1/howto-index.adoc
+# cleanup
+cd /sources
+rm -rvf git-2.50.1
+# config globale
+cat > /etc/gitconfig << "EOF"
+# Begin /etc/gitconfig
+
+[user]
+	name = cedmulle
+	email = cedmulle@student.42lausanne.ch
+[color]
+	ui = auto
+[core]
+	editor = vim
+[init]
+	defaultBranch = main
+# End /etc/gitconfig
+EOF
+# cleanup
+cd /sources
+rm -rvf git-2.50.1
+```
+> ca c'est pour ma config perso, a vous d'adapter ([ici pour la documentation](https://git-scm.com/book/fr/v2/Personnalisation-de-Git-Configuration-de-Git))
+
+### Installation `valgrind`
+
+Je sens qu'on va devoir coder un peu, alors autant installer valgrind des maintenant
+
+```bash
+wget --no-check-certificate https://sourceware.org/pub/valgrind/valgrind-3.25.1.tar.bz2
+tar -xvf valgrind-3.25.1.tar.bz2
+cd valgrind-3.25.1
+# config
+sed -i 's|/doc/valgrind||' docs/Makefile.in &&
+
+./configure --prefix=/usr \
+            --datadir=/usr/share/doc/valgrind-3.25.1 &&
+make
+# installer (je skippe les tests volontairement, trop long)
+make install
+# cleanup
+cd /sources
+rm -rvf valgrind-3.25.1
+```
+
+### Installation `gdb`
+
+six est une dependance, on va l'installer d'abord
+```bash
+wget https://files.pythonhosted.org/packages/source/s/six/six-1.17.0.tar.gz
+tar -xvf six-1.17.0.tar.gz
+cd six-1.17.0
+# installer
+pip3 wheel -w dist --no-build-isolation --no-deps --no-cache-dir $PWD
+pip3 install --no-index --find-links dist --no-user six
+# cleanup
+cd /sources
+rm -rvf six-1.17.0
+```
+
+installation de gdb
+```bash
+wget https://ftp.gnu.org/gnu/gdb/gdb-16.3.tar.xz
+tar -xvf gdb-16.3.tar.xz
+cd gdb-16.3
+# dossier de build, config et compilation
+mkdir build &&
+cd    build &&
+
+../configure --prefix=/usr          \
+             --with-system-readline \
+             --with-system-zlib     \
+             --with-python=/usr/bin/python3 &&
+make
+# installer
+make -C gdb install &&
+make -C gdbserver install
+# cleanup
+cd /sources
+rm -rvf gdb-16.3
+```
+
+### Installation `rsync`
+
+Popt est une dependance, on va l'installer d'abord
+```bash
+wget https://ftp.osuosl.org/pub/rpm/popt/releases/popt-1.x/popt-1.19.tar.gz
+tar -xvf popt-1.19.tar.gz
+cd popt-1.19
+# config
+./configure --prefix=/usr --disable-static &&
+make
+# checks
+make check
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf popt-1.19
+```
+
+rsync
+```bash
+wget https://www.samba.org/ftp/rsync/src/rsync-3.4.1.tar.gz
+tar -xvf rsync-3.4.1.tar.gz
+cd rsync-3.4.1
+# daemon
+groupadd -g 48 rsyncd &&
+useradd -c "rsyncd Daemon" -m -d /home/rsync -g rsyncd \
+    -s /bin/false -u 48 rsyncd
+# config
+./configure --prefix=/usr    \
+            --disable-xxhash \
+            --without-included-zlib &&
+make
+# checks
+sed -i '/typedef/d' wildtest.c &&
+make check
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf rsync-3.4.1
+```
+
+### Installation `net-tools`
+
+```bash
+wget https://downloads.sourceforge.net/project/net-tools/net-tools-2.10.tar.xz
+tar -xvf net-tools-2.10.tar.xz
+cd net-tools-2.10
+# config
+export BINDIR='/usr/bin' SBINDIR='/usr/bin' &&
+yes "" | make -j1                           &&
+make DESTDIR=$PWD/install -j1 install       &&
+rm    install/usr/bin/{nis,yp}domainname    &&
+rm    install/usr/bin/{hostname,dnsdomainname,domainname,ifconfig} &&
+rm -r install/usr/share/man/man1            &&
+rm    install/usr/share/man/man8/ifconfig.8 &&
+unset BINDIR SBINDIR
+# installer
+chown -R root:root install &&
+cp -a install/* /
+# cleanup
+cd /sources
+rm -rvf net-tools-2.10
+```
+
+### Installation de `which`
+
+```bash
+wget https://ftp.gnu.org/gnu/which/which-2.23.tar.gz
+tar -xvf which-2.23.tar.gz
+cd which-2.23
+# config
+./configure --prefix=/usr &&
+make
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf which-2.23
+```
+
+### Installation `fcron`
+
+```bash
+wget http://fcron.free.fr/archives/fcron-3.4.0.src.tar.gz
+tar -xvf fcron-3.4.0.src.tar.gz
+cd fcron-3.4.0
+# config
+groupadd -g 22 fcron &&
+useradd -d /dev/null -c "Fcron User" -g fcron -s /bin/false -u 22 fcron
+find doc -type f -exec sed -i 's:/usr/local::g' {} \;
+./configure --prefix=/usr        \
+            --sysconfdir=/etc    \
+            --localstatedir=/var \
+            --without-sendmail   \
+            --with-piddir=/run   \
+            --with-boot-install=no &&
+make
+# installer
+make install
+# cleanup
+cd /sources
+rm -rvf fcron-3.4.0
+```
+
+### Installation `lynx`
+
+```bash
+wget https://invisible-mirror.net/archives/lynx/tarballs/lynx2.9.2.tar.bz2
+tar -xvf lynx2.9.2.tar.bz2
+cd lynx2.9.2
+# config
+./configure --prefix=/usr           \
+            --sysconfdir=/etc/lynx  \
+            --with-zlib             \
+            --with-bzlib            \
+            --with-ssl              \
+            --with-screen=ncursesw  \
+            --enable-locale-charset \
+            --datadir=/usr/share/doc/lynx-2.9.2 &&
+make
+# installer
+make install-full
+chgrp -v -R root /usr/share/doc/lynx-2.9.2/lynx_doc
+# cleanup
+cd /sources
+rm -rvf lynx2.9.2
+```
+
+
+### Installation `oh-my-bash`
+
+```bash
+git clone https://github.com/ohmybash/oh-my-bash.git ~/.oh-my-bash
+cp ~/.bashrc ~/.bashrc.orig
+cp ~/.oh-my-bash/templates/bashrc.osh-template ~/.bashrc
+source ~/.bashrc
+# le rendre persistant
+cat >> ~/.bash_profile << "EOF"
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+EOF
+```
+
 ### suite
 
 Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause. Je penses a installer :
@@ -5845,5 +6208,14 @@ Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une
 ~~wget~~  
 ~~curl~~  
 ~~ssh~~  
-git  
+~~sudo~~  
+~~git~~  
+~~valgrind~~  
+~~gdb~~  
+~~rsync~~  
+~~net-tools~~  
+~~which~~  
+~~fcron~~  
+~~lynx~~  
+~~ohmybash~~  
 desktop environment (xfce, parce que je le connais bien et il est leger)
