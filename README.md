@@ -238,4 +238,4 @@ A voir si je décide de custom un peu + à l'avenir
 
 ## Grade 
 
-> En cours d'évaluation
+<img src="./utils/103.png" alt="Grade" width="150">

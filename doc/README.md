@@ -6203,8 +6203,7 @@ EOF
 
 ### suite
 
-Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause. Je penses a installer :
-
+Paquets additionnels installés
 ~~wget~~  
 ~~curl~~  
 ~~ssh~~  
@@ -6218,4 +6217,5 @@ Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une
 ~~fcron~~  
 ~~lynx~~  
 ~~ohmybash~~  
-desktop environment (xfce, parce que je le connais bien et il est leger)
+
+Je vais tres certainement continuer a custom mon LFS. Pour le moment je fais une pause, le projet étant validé
